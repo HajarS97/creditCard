@@ -10,6 +10,7 @@ import com.europcar.create_redit_card.exception.ValidationException;
 import com.europcar.create_redit_card.mapper.CreditCardMapper;
 import com.europcar.create_redit_card.repository.ICreditCardRepository;
 import com.europcar.create_redit_card.repository.IPersonRepository;
+import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.time.DateUtils;
@@ -20,7 +21,8 @@ import java.util.Optional;
 
 @Service
 @Slf4j
-@NoArgsConstructor
+//@NoArgsConstructor
+//@AllArgsConstructor
 public class CreditCardServiceImp implements ICreditCardService{
 
 

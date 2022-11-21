@@ -19,6 +19,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
+
+import java.util.Date;
 import java.util.Optional;
 
 
@@ -32,6 +34,8 @@ class CreditCardServiceTest {
     CreditCardDto creditCardDto;
     @Mock
     CreditCardMapper creditCardMapper;
+    @Mock
+    NotificationServiceImpl notificationService;
     @Mock
     private IPersonRepository personRepository;
     private PersonEntity personEntity;
@@ -268,6 +272,32 @@ class CreditCardServiceTest {
         }
 
     }
+//(creditCardEntity.getBlockDate().compareTo(new Date())<0
+
+    @Test
+    void blockdateExceptionTest(){
+
+        //given
+        CreditCardDto creditCardDto = CreditCardDto.builder()
+                .id(1L)
+                .cardNumber("4761739001010019")
+                .creditCardVerification("122")
+                .expiredDate("03/11/2023")
+                .build();
+        CreditCardEntity creditCardEntity = CreditCardMapper.INSTANCE.dtoToCreditCard(creditCardDto);
+        creditCardEntity.setBlockDate(new Date(2020,02,3));
+        //creditCardEntity.setMaxTentative(-5);
+
+        //when
+        Mockito.when(creditCardRepo.findBycardNumber(creditCardDto.getCardNumber())).thenReturn(Optional.of(creditCardEntity));
+
+        try {
+            creditCardService.checkCreditCardVerification(creditCardDto.getCardNumber(),"121");
+        }catch (ValidationException validationException){
+            Assertions.assertThat(validationException).isNotNull();
+            Assertions.assertThat(validationException.getMessage()).isEqualTo("you are blocked");
+        }
+    }
 
     @Test
     void tentativesExceptionTest(){
@@ -280,7 +310,8 @@ class CreditCardServiceTest {
                 .expiredDate("03/11/2023")
                 .build();
         CreditCardEntity creditCardEntity = CreditCardMapper.INSTANCE.dtoToCreditCard(creditCardDto);
-        creditCardEntity.setMaxTentative(-5);
+        creditCardEntity.setMaxTentative(-2);
+        creditCardEntity.setBlockDate(new Date(2023));
 
         //when
         Mockito.when(creditCardRepo.findBycardNumber(creditCardDto.getCardNumber())).thenReturn(Optional.of(creditCardEntity));
@@ -289,7 +320,7 @@ class CreditCardServiceTest {
             creditCardService.checkCreditCardVerification(creditCardDto.getCardNumber(),"121");
         }catch (CheckNumberAttemptException checkNumberAttemptException){
             Assertions.assertThat(checkNumberAttemptException).isNotNull();
-            Assertions.assertThat(checkNumberAttemptException.getMessage()).isEqualTo("Il vous reste "+(3 - (creditCardEntity.getMaxTentative()))+" tentative", creditCardEntity.getMaxTentative());
+            Assertions.assertThat(checkNumberAttemptException.getMessage()).isEqualTo("You still have "+(3 - (creditCardEntity.getMaxTentative()))+" attempt", creditCardEntity.getMaxTentative());
         }
     }
 
@@ -305,6 +336,7 @@ class CreditCardServiceTest {
                 .build();
         CreditCardEntity creditCardEntity = CreditCardMapper.INSTANCE.dtoToCreditCard(creditCardDto);
         creditCardEntity.setMaxTentative(2);
+        creditCardEntity.setBlockDate(new Date(2023));
         //when
         Mockito.when(creditCardRepo.findBycardNumber(creditCardDto.getCardNumber())).thenReturn(Optional.of(creditCardEntity));
 
@@ -312,7 +344,7 @@ class CreditCardServiceTest {
             creditCardService.checkCreditCardVerification(creditCardDto.getCardNumber(),"121");
         }catch (CheckNumberAttemptException checkNumberAttemptException){
             Assertions.assertThat(checkNumberAttemptException).isNotNull();
-            Assertions.assertThat(checkNumberAttemptException.getMessage()).isEqualTo("You have no atempt left, we will send you a mail to explain the procedure", creditCardEntity.getMaxTentative());
+            Assertions.assertThat(checkNumberAttemptException.getMessage()).isEqualTo("You have no attempt left, we will send you a mail to explain the procedure", creditCardEntity.getMaxTentative());
         }
 
     }
@@ -328,6 +360,7 @@ class CreditCardServiceTest {
                 .expiredDate("03/11/2023")
                 .build();
         CreditCardEntity creditCardEntity = CreditCardMapper.INSTANCE.dtoToCreditCard(creditCardDto);
+        creditCardEntity.setBlockDate(new Date(2023));
 
         //when
         Mockito.when(creditCardRepo.findBycardNumber(creditCardDto.getCardNumber())).thenReturn(Optional.of(creditCardEntity));
