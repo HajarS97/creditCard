@@ -2,6 +2,7 @@ package com.europcar.create_redit_card.controllers;
 
 import com.europcar.create_redit_card.mapper.ViewMapper;
 import com.europcar.create_redit_card.service.ICreditCardService;
+import com.europcar.create_redit_card.service.INotificationService;
 import com.europcar.create_redit_card.view.CheckCardRequest;
 import com.europcar.create_redit_card.view.CreditCardRequest;
 import com.europcar.create_redit_card.view.CreditCardResponse;
@@ -18,6 +19,8 @@ public class CreditCardController {
     ICreditCardService creditCardService;
     @Autowired
     ViewMapper viewMapper;
+    @Autowired
+    INotificationService notificationService;
 
     @PostMapping("/addCreditCard/{idPerson}")
     public CreditCardResponse createCreditCard(@RequestBody @Valid CreditCardRequest creditCardRequest,@PathVariable Long idPerson){

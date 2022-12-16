@@ -1,8 +1,10 @@
 package com.europcar.create_redit_card.exception;
 
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
-@Data
+@Getter
+@Setter
 public class CreditCardExistanceException extends RuntimeException{
 
     private final String cardNumber;

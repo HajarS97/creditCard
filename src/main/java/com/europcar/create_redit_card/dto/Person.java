@@ -1,15 +1,10 @@
 package com.europcar.create_redit_card.dto;
+import lombok.*;
 
-
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
-@Data
+@Getter
+@Setter
 @Builder
 @AllArgsConstructor
-@NoArgsConstructor
 public class Person {
 
     private String firstName;

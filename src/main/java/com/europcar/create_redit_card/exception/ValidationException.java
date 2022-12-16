@@ -13,6 +13,7 @@ public class ValidationException extends RuntimeException{
     public static final String CREDIT_CARD_BLOCKED = "Credit Card blocked";
     public static final String WRONG_DATE = "Wrong date";
     public static final String WRONG_DATE_FORMAT = "Wrong date format";
+    public static final String BLOCKED = "You are blocked";
 
     public ValidationException(String message){
         super(message);

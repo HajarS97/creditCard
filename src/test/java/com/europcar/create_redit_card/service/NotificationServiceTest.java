@@ -1,5 +1,6 @@
 package com.europcar.create_redit_card.service;
 
+import com.europcar.create_redit_card.client.NotificationClient;
 import com.europcar.create_redit_card.dto.CreditCardDto;
 import com.europcar.create_redit_card.dto.CreditCardStatus;
 import com.europcar.create_redit_card.dto.NotificationValue;
@@ -19,6 +20,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Optional;
 
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+
 @ExtendWith(MockitoExtension.class)
 class NotificationServiceTest {
 
@@ -26,6 +29,8 @@ class NotificationServiceTest {
     private  NotificationProducerEvent notificationProducerEvent;
     @Mock
     private  ICreditCardRepository creditCardRepository;
+    @Mock
+    private NotificationClient notificationClient;
     @InjectMocks
     private NotificationServiceImpl notificationService;
     PersonEntity personEntity;
@@ -105,11 +110,11 @@ class NotificationServiceTest {
 
         //when
         Mockito.when(creditCardRepository.findBycardNumber(creditCardDto.getCardNumber())).thenReturn(Optional.of(creditCardEntity));
-
+        notificationService.sendNotification(creditCardDto);
+        notificationClient.sendEmail(notificationValue);
 
         //then
-        notificationService.sendNotification(creditCardDto);
-        Mockito.verify(notificationProducerEvent, Mockito.times(1)).sendMessage(notificationValue);
+        assertNotNull(notificationClient);
 
     }
 

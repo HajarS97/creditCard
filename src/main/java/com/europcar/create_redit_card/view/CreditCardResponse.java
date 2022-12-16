@@ -2,9 +2,13 @@ package com.europcar.create_redit_card.view;
 
 import com.europcar.create_redit_card.dto.CreditCardStatus;
 
-import lombok.Data;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.Setter;
 
-@Data
+@Getter
+@Setter
+@Builder
 public class CreditCardResponse {
 
     private Long id;

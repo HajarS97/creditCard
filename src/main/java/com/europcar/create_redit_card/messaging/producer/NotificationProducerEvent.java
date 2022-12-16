@@ -1,6 +1,7 @@
 package com.europcar.create_redit_card.messaging.producer;
 
 import com.europcar.create_redit_card.dto.NotificationValue;
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -12,7 +13,7 @@ import org.springframework.util.concurrent.ListenableFutureCallback;
 
 @Service
 @Slf4j
-public class NotificationProducerEvent {
+public class NotificationProducerEvent implements INotificationProducerEvent{
 
     @Autowired
     private KafkaTemplate<String, NotificationValue> kafkaTemplate;
@@ -20,6 +21,7 @@ public class NotificationProducerEvent {
     @Value("${spring.kafka.producer.topic.name}")
     private String topicName;
 
+    @Override
     public void sendMessage(NotificationValue notificationValue) {
 
         ListenableFuture<SendResult<String, NotificationValue>> future =

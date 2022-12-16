@@ -1,5 +1,6 @@
 package com.europcar.create_redit_card.service;
 
+import com.europcar.create_redit_card.client.NotificationClient;
 import com.europcar.create_redit_card.dto.CreditCardDto;
 import com.europcar.create_redit_card.dto.NotificationValue;
 import com.europcar.create_redit_card.entity.CreditCardEntity;
@@ -17,10 +18,12 @@ public class NotificationServiceImpl implements INotificationService {
 
     private final NotificationProducerEvent notificationProducerEvent;
     private final ICreditCardRepository creditCardRepository;
+    private final NotificationClient notificationClient;
 
-    public NotificationServiceImpl(NotificationProducerEvent notificationProducerEvent, ICreditCardRepository creditCardRepository) {
+    public NotificationServiceImpl(NotificationProducerEvent notificationProducerEvent, ICreditCardRepository creditCardRepository,NotificationClient notificationClient) {
         this.notificationProducerEvent = notificationProducerEvent;
         this.creditCardRepository = creditCardRepository;
+        this.notificationClient = notificationClient;
     }
 
     public void sendNotification(CreditCardDto creditCardDto){
@@ -38,7 +41,8 @@ public class NotificationServiceImpl implements INotificationService {
                     .lastName(personEntity.getLastName())
                     .email(personEntity.getEmail())
                     .build();
-            notificationProducerEvent.sendMessage(notificationValue);
+            //notificationProducerEvent.sendMessage(notificationValue);
+            notificationClient.sendEmail(notificationValue);
         }else {
             throw new ValidationException(ValidationException.CARD_DOESNT_EXIST);
         }

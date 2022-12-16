@@ -1,7 +1,11 @@
 package com.europcar.create_redit_card.view;
-import lombok.Data;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.Setter;
 
-@Data
+@Getter
+@Setter
+@Builder
 public class CreditCardRequest {
 
     private Long id;

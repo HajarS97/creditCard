@@ -10,9 +10,6 @@ import com.europcar.create_redit_card.exception.ValidationException;
 import com.europcar.create_redit_card.mapper.CreditCardMapper;
 import com.europcar.create_redit_card.repository.ICreditCardRepository;
 import com.europcar.create_redit_card.repository.IPersonRepository;
-import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.time.DateUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -20,9 +17,6 @@ import java.util.Date;
 import java.util.Optional;
 
 @Service
-@Slf4j
-//@NoArgsConstructor
-//@AllArgsConstructor
 public class CreditCardServiceImp implements ICreditCardService{
 
 
@@ -30,25 +24,23 @@ public class CreditCardServiceImp implements ICreditCardService{
     private  CreditCardMapper creditCardMapper;
     private  INotificationService notificationService;
     private  IPersonRepository personRepository;
-    private  String cvcRegex;
-    private  String cardNumberRegex;
-    private  int numberMaxAttempt;
+    private ICreditCardCheckService creditCardCheckService;
+    @Value("${number.max.attempt}")
+    private int numberMaxAttempt;
+    @Value("${number.minutes.block}")
     private int numberMinutesBlock;
+
 
 
     public CreditCardServiceImp(ICreditCardRepository creditCardRepository, CreditCardMapper creditCardMapper,
                                 INotificationService notificationService, IPersonRepository personRepository,
-                                @Value("${cvc.format}") String cvcRegex,  @Value("${card.number.format}") String cardNumberRegex,
-                                @Value("${number.max.attempt}") int numberMaxAttempt,
-                                @Value("${number.minutes.block}") int numberMinutesBlock ) {
+                                ICreditCardCheckService creditCardCheckService
+                                 ) {
         this.creditCardRepository = creditCardRepository;
         this.creditCardMapper = creditCardMapper;
         this.notificationService = notificationService;
         this.personRepository = personRepository;
-        this.cvcRegex = cvcRegex;
-        this.cardNumberRegex = cardNumberRegex;
-        this.numberMaxAttempt = numberMaxAttempt;
-        this.numberMinutesBlock= numberMinutesBlock;
+        this.creditCardCheckService=creditCardCheckService;
     }
 
     @Override
@@ -63,7 +55,7 @@ public class CreditCardServiceImp implements ICreditCardService{
             throw new ValidationException(ValidationException.PERSON_DOESNT_EXISTD);
         }
         PersonEntity personEntity= optionalPersonEntity.get();
-        creditCardDto.checkCreditCard(cvcRegex,cardNumberRegex);
+        creditCardCheckService.checkCreditCard(creditCardDto);
         CreditCardEntity creditCardEntity = creditCardMapper.dtoToCreditCard(creditCardDto);
         creditCardEntity.setCreditCardStatus(CreditCardStatus.ACTIVE);
         creditCardEntity.setBlockDate(new Date());
@@ -92,7 +84,7 @@ public class CreditCardServiceImp implements ICreditCardService{
             return CreditCardDto.applyMask(creditCardDto.getCardNumber());
          }  creditCardEntity.setMaxTentative(0);
             creditCardRepository.save(creditCardEntity);
-            throw new ValidationException("you are blocked");
+            throw new ValidationException(ValidationException.BLOCKED);
         }throw new CreditCardExistanceException(CreditCardExistanceException.CARD_DOESNT_EXIST, numberCard);
     }
 

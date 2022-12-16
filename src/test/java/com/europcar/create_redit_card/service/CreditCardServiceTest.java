@@ -1,4 +1,3 @@
-
 package com.europcar.create_redit_card.service;
 
 import com.europcar.create_redit_card.dto.CreditCardDto;
@@ -33,18 +32,19 @@ class CreditCardServiceTest {
     private CreditCardServiceImp creditCardService;
     CreditCardDto creditCardDto;
     @Mock
-    CreditCardMapper creditCardMapper;
+    private CreditCardMapper creditCardMapper;
     @Mock
-    NotificationServiceImpl notificationService;
+    private NotificationServiceImpl notificationService;
     @Mock
     private IPersonRepository personRepository;
+    @Mock
+    private ICreditCardCheckService creditCardCheckService;
     private PersonEntity personEntity;
     private Person person;
 
 
-
     @BeforeEach
-    public void setUp(){
+    public void setUp() {
         creditCardDto = CreditCardDto.builder()
                 .id(1L)
                 .cardNumber("124")
@@ -67,18 +67,19 @@ class CreditCardServiceTest {
     }
 
     @Test
-    void creditCardAlreadyExistTest(){
+    void creditCardAlreadyExistTest() {
 
+        creditCardService = new CreditCardServiceImp(creditCardRepo, creditCardMapper, notificationService, personRepository, creditCardCheckService);
+        Assertions.assertThat(creditCardService).isNotNull();
         //given
         CreditCardEntity creditCardEntity = CreditCardMapper.INSTANCE.dtoToCreditCard(creditCardDto);
-        //creditCardEntity.setStatus(Status.ACTIVE);
 
 
         //when
         Mockito.when(creditCardRepo.findBycardNumber(creditCardDto.getCardNumber())).thenReturn(Optional.of(creditCardEntity));
         try {
-            creditCardService.createCreditCard(creditCardDto,1L);
-        }catch (CreditCardExistanceException creditCardExistanceException){
+            creditCardService.createCreditCard(creditCardDto, 1L);
+        } catch (CreditCardExistanceException creditCardExistanceException) {
             Assertions.assertThat(creditCardExistanceException).isNotNull();
             Assertions.assertThat(creditCardExistanceException.getMessage()).isEqualTo(CreditCardExistanceException.CARD_ALREADY_EXIST);
         }
@@ -86,7 +87,7 @@ class CreditCardServiceTest {
     }
 
     @Test
-    void personDoesntExistException(){
+    void personDoesntExistException() {
 
         //given
         CreditCardDto creditCardDto = CreditCardDto.builder()
@@ -97,14 +98,13 @@ class CreditCardServiceTest {
                 .creditCardStatus(CreditCardStatus.ACTIVE)
                 .build();
 
-        ReflectionTestUtils.setField(creditCardService, "cvcRegex", "^[0-9][0-9][0-9]$");
 
         //when
         Mockito.when(creditCardRepo.findBycardNumber(creditCardDto.getCardNumber())).thenReturn(Optional.empty());
         Mockito.when(personRepository.findById(personEntity.getId())).thenReturn(Optional.empty());
         try {
-            creditCardService.createCreditCard(creditCardDto,1L);
-        }catch (ValidationException validationException){
+            creditCardService.createCreditCard(creditCardDto, 1L);
+        } catch (ValidationException validationException) {
             Assertions.assertThat(validationException).isNotNull();
             Assertions.assertThat(validationException.getMessage()).isEqualTo(ValidationException.PERSON_DOESNT_EXISTD);
         }
@@ -112,7 +112,7 @@ class CreditCardServiceTest {
     }
 
     @Test
-    void checkWrongCvcVerification(){
+    void checkWrongCvcVerification() {
 
         //given
         CreditCardDto creditCardDto = CreditCardDto.builder()
@@ -123,41 +123,44 @@ class CreditCardServiceTest {
                 .creditCardStatus(CreditCardStatus.ACTIVE)
                 .build();
 
-        ReflectionTestUtils.setField(creditCardService, "cvcRegex", "^[0-9][0-9][0-9]$");
 
         //when
         Mockito.when(creditCardRepo.findBycardNumber(creditCardDto.getCardNumber())).thenReturn(Optional.empty());
         Mockito.when(personRepository.findById(personEntity.getId())).thenReturn(Optional.of(personEntity));
+        Mockito.doThrow(new ValidationException(ValidationException.CVC_WRONG_FORMAT)).when(creditCardCheckService).checkCreditCard(creditCardDto);
+
+
         try {
-            creditCardService.createCreditCard(creditCardDto,1L);
-        }catch (ValidationException validationException){
+            creditCardService.createCreditCard(creditCardDto, 1L);
+        } catch (ValidationException validationException) {
             Assertions.assertThat(validationException).isNotNull();
             Assertions.assertThat(validationException.getMessage()).isEqualTo(ValidationException.CVC_WRONG_FORMAT);
         }
 
     }
 
+
     @Test
-    void checkWrongCreditCardNumber(){
+    void checkWrongCreditCardNumber() {
 
         //given
         CreditCardDto creditCardDto = CreditCardDto.builder()
                 .id(1L)
-                .cardNumber("47617390010100190")
+                .cardNumber("476173900101001s90")
                 .creditCardVerification("112")
                 .expiredDate("12/03/2030")
                 .creditCardStatus(CreditCardStatus.ACTIVE)
                 .build();
 
-        ReflectionTestUtils.setField(creditCardService, "cvcRegex", "^[0-9][0-9][0-9]$");
-        ReflectionTestUtils.setField(creditCardService, "cardNumberRegex", "^4[0-9]{12}(?:[0-9]{3})?$");
 
         //when
         Mockito.when(creditCardRepo.findBycardNumber(creditCardDto.getCardNumber())).thenReturn(Optional.empty());
         Mockito.when(personRepository.findById(personEntity.getId())).thenReturn(Optional.of(personEntity));
+        Mockito.doThrow(new ValidationException(ValidationException.CREDIT_CARD_NUMBER_WRONG_FORMAT)).when(creditCardCheckService).checkCreditCard(creditCardDto);
+
         try {
-            creditCardService.createCreditCard(creditCardDto,1L);
-        }catch (ValidationException validationException){
+            creditCardService.createCreditCard(creditCardDto, 1L);
+        } catch (ValidationException validationException) {
             Assertions.assertThat(validationException).isNotNull();
             Assertions.assertThat(validationException.getMessage()).isEqualTo(ValidationException.CREDIT_CARD_NUMBER_WRONG_FORMAT);
         }
@@ -165,7 +168,7 @@ class CreditCardServiceTest {
     }
 
     @Test
-    void checkWrongDate(){
+    void checkWrongDate() {
 
         //given
         CreditCardDto creditCardDto = CreditCardDto.builder()
@@ -176,16 +179,15 @@ class CreditCardServiceTest {
                 .creditCardStatus(CreditCardStatus.ACTIVE)
                 .build();
 
-        ReflectionTestUtils.setField(creditCardService, "cvcRegex", "^[0-9][0-9][0-9]$");
-        ReflectionTestUtils.setField(creditCardService, "cardNumberRegex", "^4[0-9]{12}(?:[0-9]{3})?$");
-
 
         //when
         Mockito.when(creditCardRepo.findBycardNumber(creditCardDto.getCardNumber())).thenReturn(Optional.empty());
         Mockito.when(personRepository.findById(personEntity.getId())).thenReturn(Optional.of(personEntity));
+        Mockito.doThrow(new ValidationException(ValidationException.WRONG_DATE)).when(creditCardCheckService).checkCreditCard(creditCardDto);
+
         try {
-            creditCardService.createCreditCard(creditCardDto,1L);
-        }catch (ValidationException validationException){
+            creditCardService.createCreditCard(creditCardDto, 1L);
+        } catch (ValidationException validationException) {
             Assertions.assertThat(validationException).isNotNull();
             Assertions.assertThat(validationException.getMessage()).isEqualTo(ValidationException.WRONG_DATE);
         }
@@ -193,7 +195,7 @@ class CreditCardServiceTest {
     }
 
     @Test
-    void checkWrongDateFormat(){
+    void checkWrongDateFormat() {
 
         //given
         CreditCardDto creditCardDto = CreditCardDto.builder()
@@ -204,24 +206,24 @@ class CreditCardServiceTest {
                 .creditCardStatus(CreditCardStatus.ACTIVE)
                 .build();
 
-        ReflectionTestUtils.setField(creditCardService, "cvcRegex", "^[0-9][0-9][0-9]$");
-        ReflectionTestUtils.setField(creditCardService, "cardNumberRegex", "^4[0-9]{12}(?:[0-9]{3})?$");
-
 
         //when
         Mockito.when(creditCardRepo.findBycardNumber(creditCardDto.getCardNumber())).thenReturn(Optional.empty());
         Mockito.when(personRepository.findById(personEntity.getId())).thenReturn(Optional.of(personEntity));
+        Mockito.doThrow(new ValidationException(ValidationException.WRONG_DATE_FORMAT)).when(creditCardCheckService).checkCreditCard(creditCardDto);
+
         try {
-            creditCardService.createCreditCard(creditCardDto,1L);
-        }catch (ValidationException validationException){
+            creditCardService.createCreditCard(creditCardDto, 1L);
+        } catch (ValidationException validationException) {
             Assertions.assertThat(validationException).isNotNull();
             Assertions.assertThat(validationException.getMessage()).isEqualTo(ValidationException.WRONG_DATE_FORMAT);
         }
 
     }
 
+
     @Test
-    void creatCreditCardTest(){
+    void creatCreditCardTest() {
 
         //given
         CreditCardDto creditCardDto = CreditCardDto.builder()
@@ -238,8 +240,6 @@ class CreditCardServiceTest {
 
         CreditCardEntity creditCardEntity = CreditCardMapper.INSTANCE.dtoToCreditCard(creditCardDto);
         creditCardEntity.setCreditCardStatus(CreditCardStatus.ACTIVE);
-        ReflectionTestUtils.setField(creditCardService, "cvcRegex", "^[0-9][0-9][0-9]$");
-        ReflectionTestUtils.setField(creditCardService, "cardNumberRegex", "^4[0-9]{12}(?:[0-9]{3})?$");
 
         //when
         Mockito.when(creditCardRepo.findBycardNumber(creditCardDto.getCardNumber())).thenReturn(Optional.empty());
@@ -247,7 +247,7 @@ class CreditCardServiceTest {
         Mockito.when(creditCardRepo.save(creditCardEntity)).thenReturn(creditCardEntity);
         Mockito.when(creditCardMapper.creditCardToDto(creditCardEntity)).thenReturn(creditCardDtoFromEntity);
         Mockito.when(creditCardMapper.dtoToCreditCard(creditCardDto)).thenReturn(creditCardEntity);
-        CreditCardDto creditCardDtoResponse = creditCardService.createCreditCard(creditCardDto,1L);
+        CreditCardDto creditCardDtoResponse = creditCardService.createCreditCard(creditCardDto, 1L);
 
         //then
         Assertions.assertThat(creditCardDtoResponse).isNotNull();
@@ -256,7 +256,7 @@ class CreditCardServiceTest {
     }
 
     @Test
-    void createCreditCardDoesntExistTest(){
+    void createCreditCardDoesntExistTest() {
 
         //given
         CreditCardEntity creditCardEntity = CreditCardMapper.INSTANCE.dtoToCreditCard(creditCardDto);
@@ -265,17 +265,16 @@ class CreditCardServiceTest {
         //when
         Mockito.when(creditCardRepo.findBycardNumber(creditCardDto.getCardNumber())).thenReturn(Optional.empty());
         try {
-            creditCardService.checkCreditCardVerification(creditCardDto.getCardNumber(),creditCardDto.getCreditCardVerification());
-        }catch (CreditCardExistanceException creditCardExistanceException){
+            creditCardService.checkCreditCardVerification(creditCardDto.getCardNumber(), creditCardDto.getCreditCardVerification());
+        } catch (CreditCardExistanceException creditCardExistanceException) {
             Assertions.assertThat(creditCardExistanceException).isNotNull();
             Assertions.assertThat(creditCardExistanceException.getMessage()).isEqualTo(CreditCardExistanceException.CARD_DOESNT_EXIST);
         }
 
     }
-//(creditCardEntity.getBlockDate().compareTo(new Date())<0
 
     @Test
-    void blockdateExceptionTest(){
+    void blockdateExceptionTest() {
 
         //given
         CreditCardDto creditCardDto = CreditCardDto.builder()
@@ -285,22 +284,21 @@ class CreditCardServiceTest {
                 .expiredDate("03/11/2023")
                 .build();
         CreditCardEntity creditCardEntity = CreditCardMapper.INSTANCE.dtoToCreditCard(creditCardDto);
-        creditCardEntity.setBlockDate(new Date(2020,02,3));
-        //creditCardEntity.setMaxTentative(-5);
+        creditCardEntity.setBlockDate(new Date(2020, 02, 3));
 
         //when
         Mockito.when(creditCardRepo.findBycardNumber(creditCardDto.getCardNumber())).thenReturn(Optional.of(creditCardEntity));
 
         try {
-            creditCardService.checkCreditCardVerification(creditCardDto.getCardNumber(),"121");
-        }catch (ValidationException validationException){
+            creditCardService.checkCreditCardVerification(creditCardDto.getCardNumber(), "121");
+        } catch (ValidationException validationException) {
             Assertions.assertThat(validationException).isNotNull();
-            Assertions.assertThat(validationException.getMessage()).isEqualTo("you are blocked");
+            Assertions.assertThat(validationException.getMessage()).isEqualTo("You are blocked");
         }
     }
 
     @Test
-    void tentativesExceptionTest(){
+    void tentativesExceptionTest() {
 
         //given
         CreditCardDto creditCardDto = CreditCardDto.builder()
@@ -310,22 +308,23 @@ class CreditCardServiceTest {
                 .expiredDate("03/11/2023")
                 .build();
         CreditCardEntity creditCardEntity = CreditCardMapper.INSTANCE.dtoToCreditCard(creditCardDto);
-        creditCardEntity.setMaxTentative(-2);
+        ReflectionTestUtils.setField(creditCardService, "numberMaxAttempt", 3);
+        creditCardEntity.setMaxTentative(1);
         creditCardEntity.setBlockDate(new Date(2023));
 
         //when
         Mockito.when(creditCardRepo.findBycardNumber(creditCardDto.getCardNumber())).thenReturn(Optional.of(creditCardEntity));
 
         try {
-            creditCardService.checkCreditCardVerification(creditCardDto.getCardNumber(),"121");
-        }catch (CheckNumberAttemptException checkNumberAttemptException){
+            creditCardService.checkCreditCardVerification(creditCardDto.getCardNumber(), "121");
+        } catch (CheckNumberAttemptException checkNumberAttemptException) {
             Assertions.assertThat(checkNumberAttemptException).isNotNull();
-            Assertions.assertThat(checkNumberAttemptException.getMessage()).isEqualTo("You still have "+(3 - (creditCardEntity.getMaxTentative()))+" attempt", creditCardEntity.getMaxTentative());
+            Assertions.assertThat(checkNumberAttemptException.getMessage()).isEqualTo("You still have " + (3 - (creditCardEntity.getMaxTentative())) + " attempt", creditCardEntity.getMaxTentative());
         }
     }
 
     @Test
-    void maxTentativesExceptionTest(){
+    void maxTentativesExceptionTest() {
 
         //given
         CreditCardDto creditCardDto = CreditCardDto.builder()
@@ -341,8 +340,8 @@ class CreditCardServiceTest {
         Mockito.when(creditCardRepo.findBycardNumber(creditCardDto.getCardNumber())).thenReturn(Optional.of(creditCardEntity));
 
         try {
-            creditCardService.checkCreditCardVerification(creditCardDto.getCardNumber(),"121");
-        }catch (CheckNumberAttemptException checkNumberAttemptException){
+            creditCardService.checkCreditCardVerification(creditCardDto.getCardNumber(), "121");
+        } catch (CheckNumberAttemptException checkNumberAttemptException) {
             Assertions.assertThat(checkNumberAttemptException).isNotNull();
             Assertions.assertThat(checkNumberAttemptException.getMessage()).isEqualTo("You have no attempt left, we will send you a mail to explain the procedure", creditCardEntity.getMaxTentative());
         }
@@ -350,7 +349,7 @@ class CreditCardServiceTest {
     }
 
     @Test
-    void checkCreditCodeVerificationTest(){
+    void checkCreditCodeVerificationTest() {
 
         //given
         CreditCardDto creditCardDto = CreditCardDto.builder()
@@ -366,7 +365,7 @@ class CreditCardServiceTest {
         Mockito.when(creditCardRepo.findBycardNumber(creditCardDto.getCardNumber())).thenReturn(Optional.of(creditCardEntity));
         Mockito.when(creditCardMapper.creditCardToDto(creditCardEntity)).thenReturn(creditCardDto);
         //then
-        Assertions.assertThat(creditCardService.checkCreditCardVerification(creditCardDto.getCardNumber(),creditCardDto.getCreditCardVerification())).isEqualTo("476173XXXXXX0019");
+        Assertions.assertThat(creditCardService.checkCreditCardVerification(creditCardDto.getCardNumber(), creditCardDto.getCreditCardVerification())).isEqualTo("476173XXXXXX0019");
 
     }
 
