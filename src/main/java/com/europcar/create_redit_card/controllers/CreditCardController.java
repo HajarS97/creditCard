@@ -32,6 +32,4 @@ public class CreditCardController {
         return creditCardService.checkCreditCardVerification(checkCardRequest.getCardNumber(), checkCardRequest.getCreditCardVerification());
     }
 
-
 }
-

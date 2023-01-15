@@ -2,13 +2,12 @@ package com.europcar.create_redit_card.client;
 
 import com.europcar.create_redit_card.client.config.MockConfig;
 import com.europcar.create_redit_card.dto.NotificationValue;
+import com.europcar.create_redit_card.dto.SendEmailResponse;
 import com.europcar.create_redit_card.exception.EmailException;
-import com.europcar.create_redit_card.exception.ValidationException;
 import com.github.tomakehurst.wiremock.junit5.WireMockTest;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -45,8 +44,8 @@ class clientTest {
     void checkSuccessResponse() throws IOException {
 
         MockConfig.mockWithSuccess();
-        NotificationValue notificationValueResp = notificationClient.sendEmail(notificationValue);
-        Assertions.assertEquals("f", notificationValueResp.getFirstName());
+        SendEmailResponse sendEmailResponse = notificationClient.sendEmail(notificationValue);
+        Assertions.assertEquals("message", sendEmailResponse.getMessage());
 
     }
 
@@ -60,6 +59,21 @@ class clientTest {
             assertNotNull(emailException);
             assertEquals("id", emailException.getId());
             assertEquals("message", emailException.getMessage());
+        }
+    }
+
+
+
+    @Test
+    void checkInternalServerError() throws IOException {
+
+        MockConfig.mockWithInternalServerError();
+        try {
+            notificationClient.sendEmail(notificationValue);
+        } catch (EmailException emailException){
+            assertNotNull(emailException);
+            assertEquals("ID_INTERNAL_ERROR", emailException.getMessage());
+            assertEquals("INTERNAL_ERROR", emailException.getId());
         }
     }
 

@@ -2,7 +2,6 @@ package com.europcar.create_redit_card.client.config;
 
 import com.europcar.create_redit_card.exception.EmailException;
 import com.europcar.create_redit_card.exception.ErrorResponse;
-import com.europcar.create_redit_card.exception.ValidationException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import feign.Response;
@@ -30,12 +29,12 @@ public class NotificationErrorDecoder implements ErrorDecoder {
         if (response.status() == 400) {
             try (final Reader reader = response.body().asReader(StandardCharsets.UTF_8)) {
                 ErrorResponse errorResponse = objectMapper.readValue(IOUtils.toString(reader), ErrorResponse.class);
-                throw new EmailException(errorResponse.getId(),errorResponse.getMessage());
+                throw new EmailException(errorResponse.getMessage(),errorResponse.getId());
             } catch (IOException e) {
                 log.error("Error while mapping error response", e);
             }
-
-        } return new Exception("Exception while getting product details");
+            //emailException
+        } return new EmailException(EmailException.ID_INTERNAL_ERROR,EmailException.INTERNAL_ERROR);
     }
 
 }

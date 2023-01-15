@@ -41,7 +41,7 @@ public class NotificationServiceImpl implements INotificationService {
                     .lastName(personEntity.getLastName())
                     .email(personEntity.getEmail())
                     .build();
-            //notificationProducerEvent.sendMessage(notificationValue);
+            notificationProducerEvent.sendMessage(notificationValue);
             notificationClient.sendEmail(notificationValue);
         }else {
             throw new ValidationException(ValidationException.CARD_DOESNT_EXIST);

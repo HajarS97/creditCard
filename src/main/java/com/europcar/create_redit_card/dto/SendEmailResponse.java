@@ -1,10 +1,12 @@
 package com.europcar.create_redit_card.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.*;
 
+@Builder
 @AllArgsConstructor
-@Data
+@NoArgsConstructor
+@Getter
+@Setter
 public class SendEmailResponse {
 
     private String message;

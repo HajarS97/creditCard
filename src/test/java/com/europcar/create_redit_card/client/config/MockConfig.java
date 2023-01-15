@@ -33,6 +33,13 @@ public class MockConfig {
                                 defaultCharset()))));
     }
 
-
-
+    public static void mockWithInternalServerError() throws IOException {
+        stubFor(post("/notification/sendEmail")
+                .willReturn(WireMock.aResponse()
+                        .withStatus(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                        .withHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+                        .withBody(copyToString(MockConfig.class.getClassLoader()
+                                        .getResourceAsStream("response/internalservererrorcase.json"),
+                                defaultCharset()))));
+    }
 }

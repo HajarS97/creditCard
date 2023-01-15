@@ -12,7 +12,6 @@ class PersonTest {
 
     private Person person;
 
-
     @BeforeEach
     public void setUp() {
         person = Person.builder().build();

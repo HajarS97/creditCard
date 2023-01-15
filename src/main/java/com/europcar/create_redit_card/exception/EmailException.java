@@ -1,16 +1,22 @@
 package com.europcar.create_redit_card.exception;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
 
+import lombok.*;
 
-@Data
-@AllArgsConstructor
+@Setter
+@Getter
 @Builder
+@AllArgsConstructor
 public class EmailException extends RuntimeException{
-    private final String id;
-    private final String message;
+
+    private String id;
+    public static final String ID_INTERNAL_ERROR="ID_INTERNAL_ERROR";
+    public static final String INTERNAL_ERROR = "INTERNAL_ERROR";
+
+    public EmailException(String message,String id){
+        super(message);
+        this.id=id;
+    }
 
 
 }

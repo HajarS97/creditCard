@@ -54,7 +54,7 @@ dependencies {
 	implementation group: 'org.springframework.kafka', name: 'spring-kafka', version: '2.9.2'
 	// https://mvnrepository.com/artifact/io.springfox/springfox-swagger-ui
 	//implementation group: 'io.springfox', name: 'springfox-swagger-ui', version: '2.0.2'
-	// https://mvnrepository.com/artifact/io.springfox/springfox-swagger2
+	//https://mvnrepository.com/artifact/io.springfox/springfox-swagger2
 	//implementation group: 'io.springfox', name: 'springfox-swagger2', version: '2.9.2'
 	//implementation 'io.springfox:springfox-boot-starter:3.0.0'
 	implementation group: 'org.sonarsource.scanner.maven', name: 'sonar-maven-plugin', version: '3.9.1.2184'
@@ -64,6 +64,8 @@ dependencies {
 	// https://mvnrepository.com/artifact/org.springframework.cloud/spring-cloud-starter-openfeign
 	implementation group: 'org.springframework.cloud', name: 'spring-cloud-starter-openfeign', version: '3.1.5'
 	testImplementation "com.github.tomakehurst:wiremock-jre8:2.34.0"
+
+	implementation "org.springdoc:springdoc-openapi-ui:1.6.9"
 
 
 
